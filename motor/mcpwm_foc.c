@@ -3118,6 +3118,7 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		const float duty_abs = fabsf(duty_now);
 		const float vq_now = motor_now->m_motor_state.vq;
 		const float speed_fast_now = motor_now->m_pll_speed;
+		float abs_rpm_now = fabsf(RADPS2RPM_f(speed_fast_now));
 
 		float id_set_tmp = motor_now->m_id_set;
 		float iq_set_tmp = motor_now->m_iq_set;
@@ -3388,9 +3389,21 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		const float mod_q = motor_now->m_motor_state.mod_q_filter;
 
 		// Running FW from the 1 khz timer seems fast enough.
-//		run_fw(motor_now, dt);
+		//run_fw(motor_now, dt);
 		id_set_tmp -= motor_now->m_i_fw_set;
 		iq_set_tmp -= SIGN(mod_q) * motor_now->m_i_fw_set * conf_now->foc_fw_q_current_factor;
+
+		//apply boost in foc mode, able changes
+		float friction_rpm = 900.0;
+		float friction_amps = 0.65;
+		float friction_percent = 0.1;
+		float ramp_factor;
+
+		if (abs_rpm_now < friction_rpm)
+		{
+			ramp_factor = fabsf(powf((abs_rpm_now / friction_rpm - 1), 3.0));
+			iq_set_tmp = iq_set_tmp * (1 + friction_percent * ramp_factor) + SIGN(iq_set_tmp) * friction_amps * ramp_factor;
+		}
 
 		// Apply current limits
 		// TODO: Consider D axis current for the input current as well. Currently this is done using
