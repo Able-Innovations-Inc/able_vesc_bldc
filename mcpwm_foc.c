@@ -2340,6 +2340,9 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 
 		const float duty_abs = fabsf(motor_now->m_motor_state.duty_now);
 		const float speed_fast_now = motor_now->m_pll_speed;
+		float abs_rpm_now = fabsf(RADPS2RPM_f(speed_fast_now));
+
+
 		float id_set_tmp = motor_now->m_id_set;
 		float iq_set_tmp = motor_now->m_iq_set;
 		motor_now->m_motor_state.max_duty = conf_now->l_max_duty;
@@ -2524,6 +2527,19 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 
 			id_set_tmp = (lambda - sqrtf(SQ(lambda) + 8.0 * SQ(ld_lq_diff) * SQ(iq_set_tmp))) / (4.0 * ld_lq_diff);
 			iq_set_tmp = SIGN(iq_set_tmp) * sqrtf(SQ(iq_set_tmp) - SQ(id_set_tmp));
+		}
+
+		float friction_rpm = 900.0;
+		float friction_amps = 0.65;
+		float friction_percent = 0.1;
+		float foc_ramp_power = 3.0;
+
+		float ramp_factor;
+
+		if (abs_rpm_now < friction_rpm)
+		{
+			ramp_factor = fabsf(powf((abs_rpm_now / friction_rpm - 1), 3.0));
+			iq_set_tmp = iq_set_tmp * (1 + friction_percent * ramp_factor) + SIGN(iq_set_tmp) * friction_amps * ramp_factor;
 		}
 
 		// Apply current limits
