@@ -205,6 +205,10 @@ int32_t confgenerator_serialize_mcconf(uint8_t *buffer, const mc_configuration *
 	buffer_append_float16(buffer, conf->bms.vmax_limit_start, 1000, &ind);
 	buffer_append_float16(buffer, conf->bms.vmax_limit_end, 1000, &ind);
 	buffer[ind++] = conf->bms.fwd_can_mode;
+	buffer_append_float32_auto(buffer, conf->foc_friction_rpm, &ind);
+	buffer_append_float32_auto(buffer, conf->foc_friction_amps, &ind);
+	buffer_append_float32_auto(buffer, conf->foc_friction_percent, &ind);
+	buffer_append_float32_auto(buffer, conf->foc_ramp_power, &ind);
 
 	return ind;
 }
@@ -540,6 +544,10 @@ bool confgenerator_deserialize_mcconf(const uint8_t *buffer, mc_configuration *c
 	conf->bms.vmax_limit_start = buffer_get_float16(buffer, 1000, &ind);
 	conf->bms.vmax_limit_end = buffer_get_float16(buffer, 1000, &ind);
 	conf->bms.fwd_can_mode = buffer[ind++];
+	conf->foc_friction_rpm = buffer_get_float32_auto(buffer, &ind);
+	conf->foc_friction_amps = buffer_get_float32_auto(buffer, &ind);
+	conf->foc_friction_percent = buffer_get_float32_auto(buffer, &ind);
+	conf->foc_ramp_power = buffer_get_float32_auto(buffer, &ind);
 
 	return true;
 }
@@ -871,6 +879,10 @@ void confgenerator_set_defaults_mcconf(mc_configuration *conf) {
 	conf->bms.vmax_limit_start = MCCONF_BMS_VMAX_LIMIT_START;
 	conf->bms.vmax_limit_end = MCCONF_BMS_VMAX_LIMIT_END;
 	conf->bms.fwd_can_mode = MCCONF_BMS_FWD_CAN_MODE;
+	conf->foc_friction_rpm = MCCONF_FOC_FRICTION_RPM;
+	conf->foc_friction_amps = MCCONF_FOC_FRICTION_AMPS;
+	conf->foc_friction_percent = MCCONF_FOC_FRICTION_PERCENT;
+	conf->foc_ramp_power = MCCONF_FOC_RAMP_POWER;
 }
 
 void confgenerator_set_defaults_appconf(app_configuration *conf) {

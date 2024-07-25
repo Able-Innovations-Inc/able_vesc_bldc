@@ -419,6 +419,11 @@ typedef struct {
 	float hall_sl_erpm;
 
 	// FOC
+	float foc_friction_rpm;
+	float foc_friction_amps;
+	float foc_friction_percent;
+	float foc_ramp_power;
+
 	float foc_current_kp;
 	float foc_current_ki;
 	float foc_f_zv;

@@ -3394,15 +3394,12 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		iq_set_tmp -= SIGN(mod_q) * motor_now->m_i_fw_set * conf_now->foc_fw_q_current_factor;
 
 		//apply boost in foc mode, able changes
-		float friction_rpm = 900.0;
-		float friction_amps = 0.65;
-		float friction_percent = 0.1;
 		float ramp_factor;
 
-		if (abs_rpm_now < friction_rpm)
+		if (abs_rpm_now < conf_now->foc_friction_rpm)
 		{
-			ramp_factor = fabsf(powf((abs_rpm_now / friction_rpm - 1), 3.0));
-			iq_set_tmp = iq_set_tmp * (1 + friction_percent * ramp_factor) + SIGN(iq_set_tmp) * friction_amps * ramp_factor;
+			ramp_factor = fabsf(powf((abs_rpm_now / conf_now->foc_friction_rpm - 1), conf_now->foc_ramp_power));
+			iq_set_tmp = iq_set_tmp * (1 + conf_now->foc_friction_percent * ramp_factor) + SIGN(iq_set_tmp) * conf_now->foc_friction_amps * ramp_factor;
 		}
 
 		// Apply current limits
