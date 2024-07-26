@@ -3393,15 +3393,6 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		id_set_tmp -= motor_now->m_i_fw_set;
 		iq_set_tmp -= SIGN(mod_q) * motor_now->m_i_fw_set * conf_now->foc_fw_q_current_factor;
 
-		//apply boost in foc mode, able changes
-		float ramp_factor;
-
-		if (abs_rpm_now < conf_now->foc_friction_rpm)
-		{
-			ramp_factor = fabsf(powf((abs_rpm_now / conf_now->foc_friction_rpm - 1), conf_now->foc_ramp_power));
-			iq_set_tmp = iq_set_tmp * (1 + conf_now->foc_friction_percent * ramp_factor) + SIGN(iq_set_tmp) * conf_now->foc_friction_amps * ramp_factor;
-		}
-
 		// Apply current limits
 		// TODO: Consider D axis current for the input current as well. Currently this is done using
 		// l_in_current_map_start in update_override_limits.
@@ -3420,6 +3411,15 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		float current_max_abs = fabsf(utils_max_abs(conf_now->lo_current_max, conf_now->lo_current_min));
 		utils_truncate_number_abs(&id_set_tmp, current_max_abs);
 		utils_truncate_number_abs(&iq_set_tmp, sqrtf(SQ(current_max_abs) - SQ(id_set_tmp)));
+
+		//apply boost in foc mode, able changes
+		float ramp_factor;
+
+		if (abs_rpm_now < conf_now->foc_friction_rpm)
+		{
+			ramp_factor = fabsf(powf((abs_rpm_now / conf_now->foc_friction_rpm - 1), conf_now->foc_ramp_power));
+			iq_set_tmp = iq_set_tmp * (1 + conf_now->foc_friction_percent * ramp_factor) + SIGN(iq_set_tmp) * conf_now->foc_friction_amps * ramp_factor;
+		}
 
 		motor_now->m_motor_state.id_target = id_set_tmp;
 		motor_now->m_motor_state.iq_target = iq_set_tmp;
